@@ -1,9 +1,9 @@
-//TODO: show length over waveform
 var canvas, audio;
 
 var markerState = {};
 var currentMarker;
 var samplesPerPixel;
+var sampleRate;
 
 
 function canvasClick(e) {
@@ -125,7 +125,7 @@ function updateCurrentSelection() {
 }
 
 function getMarkerValue(node) {
-  return Math.round($(node).find('.marker-value').val() * audio.sampleRate());
+  return Math.round($(node).find('.marker-value').val() * sampleRate);
 }
 
 function getMarkerLength(node) {
@@ -133,7 +133,7 @@ function getMarkerLength(node) {
 }
 
 function setMarkerValue(marker, pos) {
-  var seconds = roundTo(pos / audio.sampleRate(), 10);
+  var seconds = roundTo(pos / sampleRate, 10);
   $('#markers .' + marker + ' .marker-value').val(seconds);
 }
 
@@ -146,7 +146,7 @@ function updateMarkerState() {
     }
     var markerValue = getMarkerValue(this);
     var markerLength = getMarkerLength(this);
-    markerState[markerName] = markerValue;
+    markerState[markerName] = [markerValue, markerLength];
     audio.updateBuffer(markerName, markerValue, markerLength);
   });
 

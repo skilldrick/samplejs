@@ -3,7 +3,6 @@ function setupAudio(canvas) {
   console.log(c);
   var buff;
   var data;
-  var sampleRate;
   var oldSource;
   var currentBuffer;
   var markerBuffers = {};
@@ -95,7 +94,6 @@ function setupAudio(canvas) {
   return {
     playBufferByName: playBufferByName,
     playFrom: playFrom,
-    updateBuffer: updateBuffer,
-    sampleRate: function () { return sampleRate; }
+    updateBuffer: updateBuffer
   };
 }

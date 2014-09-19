@@ -29,16 +29,16 @@ function setupCanvas() {
     }
 
     Object.keys(markerState).forEach(function (key) {
-      drawMarker(markerState[key], key, key === playing);
+      drawMarker(markerState[key][0], markerState[key][1], key, key === playing);
     });
   }
 
-  function drawMarker(pos, key, isCurrent) {
-    var pos = markerState[key];
+  function drawMarker(pos, widthInSeconds, key, isCurrent) {
     var x = Math.floor((1 / samplesPerPixel) * pos);
+    var width = Math.floor(widthInSeconds * sampleRate / samplesPerPixel);
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,0.5)";
-    ctx.fillRect(x, 0, 2, height);
+    ctx.fillRect(x, 0, width, height);
 
     var size = 10;
     ctx.fillStyle = isCurrent ? "blue" : "gray";
@@ -60,7 +60,6 @@ function setupCanvas() {
 
   return {
     draw: draw,
-    drawMarker: drawMarker,
     width: width,
     setAmplitudes: setAmplitudes
   };
