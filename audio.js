@@ -69,7 +69,7 @@ function success() {
   */
 }
 
-function draw() {
+function draw(playing) {
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = "rgb(100, 100, 100)";
   for (var i = 0; i < amplitudes.length; i++) {
@@ -77,11 +77,11 @@ function draw() {
   }
 
   Object.keys(markerState).forEach(function (key) {
-    drawLine(markerState[key], key);
+    drawMarker(markerState[key], key, key === playing);
   });
 }
 
-function drawLine(pos, key) {
+function drawMarker(pos, key, isCurrent) {
   var pos = markerState[key];
   var x = Math.floor((1 / samplesPerPixel) * pos);
   ctx.save();
@@ -89,7 +89,7 @@ function drawLine(pos, key) {
   ctx.fillRect(x, 0, 2, height);
 
   var size = 10;
-  ctx.fillStyle = "rgb(100, 100, 100)";
+  ctx.fillStyle = isCurrent ? "blue" : "gray";
   ctx.fillRect(x, height - size, size, size);
   ctx.fillStyle = "white";
   ctx.textBaseline = "top";
@@ -143,7 +143,9 @@ function keyPress(key) {
   if (key) {
     $('#markers .' + key).find('[type=radio]').prop('checked', true);
     updateCurrentSelection();
+    draw(key);
     playBuffer(markerBuffers[key]);
+    setTimeout(draw, 1000); //this is awful
   }
 }
 
