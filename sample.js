@@ -91,21 +91,31 @@ function updateMarkerState() {
     audio.updateBuffer(markerName, markerValue, markerLength);
   });
 
-  console.log(markerState);
   canvas.draw();
 }
 
 function buildDom() {
   var html = '<p class="{{key}} marker row">';
   html += '<span class="col-1"><input class="marker-radio" type="radio" name="marker" value="{{key}}"> {{key}}</span>';
-  html += '<span class="col-2"><input class="marker-value" type="number" value="0" min=0 step=0.1> s</span>';
-  html += '<span class="col-3"><input class="marker-length" type="number" value="1" min=0.1 step=0.1> s</span>';
+  html += '<span class="col-2"><input class="marker-value" type="number" value="{{value}}" min=0 step=0.1> s</span>';
+  html += '<span class="col-3"><input class="marker-length" type="number" value="0.5" min=0.1 step=0.1> s</span>';
   html += '</p>';
 
   var $markers = $('#markers');
-  var keys = ["A", "S", "D", "F"];
+  var keys = ["1", "2", "3", "4",
+              "Q", "W", "E", "R",
+              "A", "S", "D", "F",
+              "Z", "X", "C", "V"];
+
+  var count = 0;
+  var position;
   keys.forEach(function (key) {
-    $markers.append(html.replace(/{{key}}/g, key));
+    count++;
+    position = count * 4;
+    $markers.append(html.replace(/{{key}}/g, key).replace(/{{value}}/g, position));
+    if (count%4 == 0) {
+      $markers.append('</p>');
+    }
   });
 
   $markers.find('.A .marker-radio').prop('checked', true);
