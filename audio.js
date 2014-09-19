@@ -32,6 +32,14 @@ var data;
 var canvas, ctx, width, height, halfHeight;
 var amplitudes = [];
 
+var oldSource;
+var currentBuffer;
+var markerState = {};
+var markerBuffers = {};
+var currentMarker;
+
+var samplesPerPixel;
+
 
 function success() {
   data = [buff.getChannelData(0), buff.getChannelData(1)];
@@ -41,13 +49,13 @@ function success() {
   width = canvas.width;
   height = canvas.height;
   halfHeight = height / 2;
-  var jump = Math.floor(buff.length / width);
+  samplesPerPixel = Math.floor(buff.length / width);
 
   var x, val;
   for (var i = 0; i < width; i++) {
     x = i;
 
-    val = (data[0][i * jump] + data[1][i * jump]) / 2;
+    val = (data[0][i * samplesPerPixel] + data[1][i * samplesPerPixel]) / 2;
     amplitude = Math.pow(Math.abs(val), 0.7) * halfHeight;
     amplitudes.push(amplitude);
     //ctx.fillRect(x, halfHeight - amplitude, 1, amplitude * 2);
@@ -63,6 +71,7 @@ function success() {
 
 function draw() {
   ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = "rgb(100, 100, 100)";
   for (var i = 0; i < amplitudes.length; i++) {
     ctx.fillRect(i, halfHeight - amplitudes[i], 1, amplitudes[i] * 2);
   }
@@ -74,12 +83,13 @@ function draw() {
 
 function drawLine(pos, key) {
   var pos = markerState[key];
-  var x = Math.floor((width / buff.length) * pos);
+  var x = Math.floor((1 / samplesPerPixel) * pos);
   ctx.save();
   ctx.fillStyle = "rgba(0,0,0,0.5)";
   ctx.fillRect(x, 0, 2, height);
 
   var size = 10;
+  ctx.fillStyle = "rgb(100, 100, 100)";
   ctx.fillRect(x, height - size, size, size);
   ctx.fillStyle = "white";
   ctx.textBaseline = "top";
@@ -97,17 +107,11 @@ function canvasClick(e) {
 
   x = e.clientX + body.scrollLeft + html.scrollLeft - Math.floor(canoffset.left);
 
-  var pos = Math.floor(x / width * buff.length);
+  var pos = Math.floor(x * samplesPerPixel);
 
   setPosition(currentMarker, pos);
   playFrom(pos);
 }
-
-var oldSource;
-var currentBuffer;
-var markerState = {};
-var markerBuffers = {};
-var currentMarker;
 
 
 function playFrom(pos) {
@@ -161,12 +165,21 @@ function getMarkerName(radio) {
 }
 
 function setPosition(marker, pos) {
-  $('#markers .' + marker + ' [type=number]').val(pos);
+  setMarkerValue(marker, pos);
   updateMarkerState();
 }
 
 function updateCurrentSelection() {
   currentMarker = $('#markers [type=radio]:checked').val();
+}
+
+function getMarkerValue(node) {
+  return +$(node).find('[type=number]').val() * 44100;
+}
+
+function setMarkerValue(marker, pos) {
+  var seconds = Math.round(10 * pos / 44100) / 10;
+  $('#markers .' + marker + ' [type=number]').val(seconds);
 }
 
 function updateMarkerState() {
@@ -176,7 +189,7 @@ function updateMarkerState() {
     if ($radio.is(':checked')) {
       currentMarker = markerName;
     }
-    var markerValue = +$(this).find('[type=number]').val();
+    var markerValue = getMarkerValue(this);
     markerState[markerName] = markerValue;
     markerBuffers[markerName] = getBufferFrom(markerValue);
   });
