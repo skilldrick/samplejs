@@ -1,5 +1,6 @@
 function setupAudio(canvas) {
   var c = new AudioContext();
+  console.log(c);
   var buff;
   var data;
   var sampleRate;

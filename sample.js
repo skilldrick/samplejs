@@ -1,3 +1,4 @@
+//TODO: show length over waveform
 var canvas, audio;
 
 var markerState = {};
@@ -26,6 +27,64 @@ function keyPress(key) {
     updateCurrentSelection();
     playAndDraw(key);
   }
+}
+
+
+
+function decreaseLength() {
+  changeLength(-0.1);
+}
+
+function increaseLength() {
+  changeLength(0.1);
+}
+
+function changeLength(amount) {
+  var $node = $('#markers .' + currentMarker + ' .marker-length');
+  changeNodeValue($node, amount);
+}
+
+function decreaseStartTime() {
+  changeStartTime(-0.1);
+}
+
+function increaseStartTime() {
+  changeStartTime(0.1);
+}
+
+function changeStartTime(amount) {
+  var $node = $('#markers .' + currentMarker + ' .marker-value');
+  changeNodeValue($node, amount);
+}
+
+function changeNodeValue($node, amount) {
+  var newValue = roundTo(+$node.val() + amount, 10)
+  var min = +$node.prop('min');
+  if (newValue >= min) {
+    $node.val(newValue);
+    $node.change();
+  }
+}
+
+function arrowPress(arrow) {
+  switch (arrow) {
+  case 'left':
+    decreaseLength();
+    break;
+  case 'right':
+    increaseLength();
+    break;
+  case 'down':
+    decreaseStartTime();
+    break;
+  case 'up':
+    increaseStartTime();
+    break;
+  }
+}
+
+function roundTo(number, multiplier) {
+  return Math.round(multiplier * number) / multiplier;
 }
 
 function changeMarker() {
@@ -74,7 +133,7 @@ function getMarkerLength(node) {
 }
 
 function setMarkerValue(marker, pos) {
-  var seconds = Math.round(10 * pos / audio.sampleRate()) / 10;
+  var seconds = roundTo(pos / audio.sampleRate(), 10);
   $('#markers .' + marker + ' .marker-value').val(seconds);
 }
 
@@ -112,7 +171,7 @@ function buildDom() {
 
   var keyMap = {};
   keys.forEach(function (key) {
-    var charCode = key.toLowerCase().charCodeAt(0);
+    var charCode = key.toUpperCase().charCodeAt(0);
     keyMap[charCode] = key;
   });
   return keyMap;
@@ -126,8 +185,15 @@ $(function () {
 
   $('#canvas').click(canvasClick);
 
-  $(document).keypress(function (e) {
+  var arrowMap = {
+    37: 'left',
+    38: 'up',
+    39: 'right',
+    40: 'down'
+  };
+  $(document).keydown(function (e) {
     keyPress(keyMap[e.which]);
+    arrowPress(arrowMap[e.which]);
   });
 
   $('#markers .marker-radio').change(changeMarker);
