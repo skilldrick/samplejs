@@ -1,0 +1,36 @@
+body {
+  font-family: Helvetica;
+  margin: 10px;
+}
+
+.marker {
+  margin-bottom: 10px;
+}
+
+#markers {
+  margin-top: 20px;
+  margin-left: 20px;
+}
+
+.marker-value {
+  width: 60px;
+}
+.marker-length {
+  width: 40px;
+}
+
+.col-1, .col-2, .col-3 {
+  display: inline-block;
+}
+
+.col-1 {
+  width: 50px;
+}
+
+.col-2 {
+  width: 80px;
+}
+
+.col-3 {
+  width: 80px;
+}

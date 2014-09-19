@@ -16,7 +16,7 @@ function canvasClick(e) {
   var pos = Math.floor(x * samplesPerPixel);
 
   setPosition(currentMarker, pos);
-  audio.playFrom(pos);
+  audio.playBufferByName(currentMarker);
 }
 
 
@@ -33,8 +33,8 @@ function changeMarker() {
 }
 
 function changeMarkerPosition() {
-  selectMarker($(this).parent());
-  currentMarker = getMarkerName($(this).parent().find('.marker-radio'));
+  selectMarker($(this).closest('.row'));
+  currentMarker = getMarkerName($(this).closest('.row').find('.marker-radio'));
   updateMarkerState();
   playAndDraw(currentMarker);
 }
@@ -69,21 +69,26 @@ function getMarkerValue(node) {
   return Math.round($(node).find('.marker-value').val() * audio.sampleRate());
 }
 
+function getMarkerLength(node) {
+  return +$(node).find('.marker-length').val();
+}
+
 function setMarkerValue(marker, pos) {
   var seconds = Math.round(10 * pos / audio.sampleRate()) / 10;
   $('#markers .' + marker + ' .marker-value').val(seconds);
 }
 
 function updateMarkerState() {
-  $('#markers p').each(function () {
+  $('#markers .marker').each(function () {
     var $radio = $(this).find('.marker-radio');
     var markerName = getMarkerName($radio);
     if ($radio.is(':checked')) {
       currentMarker = markerName;
     }
     var markerValue = getMarkerValue(this);
+    var markerLength = getMarkerLength(this);
     markerState[markerName] = markerValue;
-    audio.updateBuffer(markerName, markerValue);
+    audio.updateBuffer(markerName, markerValue, markerLength);
   });
 
   console.log(markerState);
@@ -91,7 +96,11 @@ function updateMarkerState() {
 }
 
 function buildDom() {
-  var html = '<p class="{{key}}"><input class="marker-radio" type="radio" name="marker" value="{{key}}">{{key}} <input class="marker-value" type="number" value="0" min=0 step=0.1></p>';
+  var html = '<p class="{{key}} marker row">';
+  html += '<span class="col-1"><input class="marker-radio" type="radio" name="marker" value="{{key}}"> {{key}}</span>';
+  html += '<span class="col-2"><input class="marker-value" type="number" value="0" min=0 step=0.1> s</span>';
+  html += '<span class="col-3"><input class="marker-length" type="number" value="1" min=0.1 step=0.1> s</span>';
+  html += '</p>';
 
   var $markers = $('#markers');
   var keys = ["A", "S", "D", "F"];
@@ -122,6 +131,6 @@ $(function () {
   });
 
   $('#markers .marker-radio').change(changeMarker);
-  $('#markers .marker-value').change(changeMarkerPosition);
+  $('#markers .marker-value, #markers .marker-length').change(changeMarkerPosition);
   $('#markers p').click(function () { selectMarker(this); });
 });

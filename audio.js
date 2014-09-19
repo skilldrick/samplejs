@@ -54,10 +54,10 @@ function setupAudio(canvas) {
     playBuffer(currentBuffer);
   }
 
-  function getBufferFrom(pos) {
+  function getBufferFrom(pos, length) {
     var newData = [];
-    newData[0] = new Float32Array(data[0].subarray(pos, pos + sampleRate));
-    newData[1] = new Float32Array(data[1].subarray(pos, pos + sampleRate));
+    newData[0] = new Float32Array(data[0].subarray(pos, pos + sampleRate * length));
+    newData[1] = new Float32Array(data[1].subarray(pos, pos + sampleRate * length));
 
     return hydrateAudioBuffer(newData, c);
   }
@@ -76,8 +76,8 @@ function setupAudio(canvas) {
   }
 
 
-  function updateBuffer(markerName, markerValue) {
-    markerBuffers[markerName] = getBufferFrom(markerValue);
+  function updateBuffer(markerName, markerValue, markerLength) {
+    markerBuffers[markerName] = getBufferFrom(markerValue, markerLength);
   }
 
 
