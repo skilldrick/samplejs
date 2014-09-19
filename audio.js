@@ -39,16 +39,12 @@ var markerBuffers = {};
 var currentMarker;
 
 var samplesPerPixel;
+var timeout;
 
 
 function success() {
   data = [buff.getChannelData(0), buff.getChannelData(1)];
 
-  canvas = document.getElementById('canvas');
-  ctx = canvas.getContext('2d');
-  width = canvas.width;
-  height = canvas.height;
-  halfHeight = height / 2;
   samplesPerPixel = Math.floor(buff.length / width);
 
   var x, val;
@@ -58,15 +54,7 @@ function success() {
     val = (data[0][i * samplesPerPixel] + data[1][i * samplesPerPixel]) / 2;
     amplitude = Math.pow(Math.abs(val), 0.7) * halfHeight;
     amplitudes.push(amplitude);
-    //ctx.fillRect(x, halfHeight - amplitude, 1, amplitude * 2);
   }
-
-  /*
-  var source = c.createBufferSource();
-  source.buffer = buff;
-  source.connect(c.destination);
-  source.start();
-  */
 }
 
 function draw(playing) {
@@ -93,6 +81,8 @@ function drawMarker(pos, key, isCurrent) {
   ctx.fillRect(x, height - size, size, size);
   ctx.fillStyle = "white";
   ctx.textBaseline = "top";
+  ctx.textAlign = "left";
+  ctx.font = "7pt Arial";
   ctx.fillText(key, x + 1, height + 1 - size);
   ctx.restore();
 
@@ -138,14 +128,10 @@ function playBuffer(buffer) {
 }
 
 function keyPress(key) {
-  if (!currentBuffer) return;
-
   if (key) {
     $('#markers .' + key).find('[type=radio]').prop('checked', true);
     updateCurrentSelection();
-    draw(key);
-    playBuffer(markerBuffers[key]);
-    setTimeout(draw, 1000); //this is awful
+    playAndDraw(key);
   }
 }
 
@@ -154,11 +140,21 @@ function changeMarker() {
 }
 
 function changeMarkerPosition() {
+  selectMarker($(this).parent());
+  currentMarker = getMarkerName($(this).parent().find('[type=radio]'));
   updateMarkerState();
+  playAndDraw(currentMarker);
 }
 
-function selectMarker() {
-  $(this).find('[type=radio]').prop('checked', true);
+function playAndDraw(key) {
+  draw(key);
+  playBuffer(markerBuffers[key]);
+  timeout && clearTimeout(timeout);
+  timeout = setTimeout(draw, 1000); //this is awful
+}
+
+function selectMarker(node) {
+  $(node).find('[type=radio]').prop('checked', true);
   updateCurrentSelection();
 }
 
@@ -202,6 +198,18 @@ function updateMarkerState() {
 
 
 $(function () {
+  canvas = document.getElementById('canvas');
+  ctx = canvas.getContext('2d');
+  width = canvas.width;
+  height = canvas.height;
+  halfHeight = height / 2;
+
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "center";
+  ctx.font = "30pt Arial";
+  ctx.fillText("Loading audio ...", width / 2, height / 2);
+
+
   loadBuffer(c)('accessorise.mp3', function (err, buffer) {
     if (err) {
       console.log('error', err);
@@ -228,5 +236,5 @@ $(function () {
 
   $('#markers input[type=radio]').change(changeMarker);
   $('#markers input[type=number]').change(changeMarkerPosition);
-  $('#markers p').click(selectMarker);
+  $('#markers p').click(function () { selectMarker(this); });
 });
