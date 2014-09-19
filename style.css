@@ -1,6 +1,13 @@
 body {
+  background-color: #eee;
   font-family: Helvetica;
   margin: 10px;
+}
+
+#canvas {
+  display: block;
+  background-color: #fff;
+  margin: 0 auto;
 }
 
 .marker {
@@ -8,15 +15,21 @@ body {
 }
 
 #markers {
-  margin-top: 20px;
-  margin-left: 20px;
+  display: block;
+  width: 730px;
+  margin: 20px auto 0 auto;
 }
 
 .marker-value {
   width: 60px;
 }
+
 .marker-length {
   width: 40px;
+}
+
+.row { 
+  display: inline-block;
 }
 
 .col-1, .col-2, .col-3 {
@@ -24,7 +37,7 @@ body {
 }
 
 .col-1 {
-  width: 50px;
+  width: 30px;
 }
 
 .col-2 {
@@ -32,5 +45,5 @@ body {
 }
 
 .col-3 {
-  width: 80px;
+  width: 100px;
 }
