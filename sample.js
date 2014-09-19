@@ -22,7 +22,7 @@ function canvasClick(e) {
 
 function keyPress(key) {
   if (key) {
-    $('#markers .' + key).find('[type=radio]').prop('checked', true);
+    $('#markers .' + key).find('.marker-radio').prop('checked', true);
     updateCurrentSelection();
     playAndDraw(key);
   }
@@ -34,7 +34,7 @@ function changeMarker() {
 
 function changeMarkerPosition() {
   selectMarker($(this).parent());
-  currentMarker = getMarkerName($(this).parent().find('[type=radio]'));
+  currentMarker = getMarkerName($(this).parent().find('.marker-radio'));
   updateMarkerState();
   playAndDraw(currentMarker);
 }
@@ -42,13 +42,13 @@ function changeMarkerPosition() {
 var timeout;
 function playAndDraw(key) {
   canvas.draw(key);
-  timeout = setTimeout(canvas.draw, 1000); //this is awful
   timeout && clearTimeout(timeout);
+  timeout = setTimeout(canvas.draw, 1000); //this is awful
   audio.playBufferByName(key);
 }
 
 function selectMarker(node) {
-  $(node).find('[type=radio]').prop('checked', true);
+  $(node).find('.marker-radio').prop('checked', true);
   updateCurrentSelection();
 }
 
@@ -62,21 +62,21 @@ function setPosition(marker, pos) {
 }
 
 function updateCurrentSelection() {
-  currentMarker = $('#markers [type=radio]:checked').val();
+  currentMarker = $('#markers .marker-radio:checked').val();
 }
 
 function getMarkerValue(node) {
-  return +$(node).find('[type=number]').val() * 44100;
+  return Math.round($(node).find('.marker-value').val() * audio.sampleRate());
 }
 
 function setMarkerValue(marker, pos) {
-  var seconds = Math.round(10 * pos / 44100) / 10;
-  $('#markers .' + marker + ' [type=number]').val(seconds);
+  var seconds = Math.round(10 * pos / audio.sampleRate()) / 10;
+  $('#markers .' + marker + ' .marker-value').val(seconds);
 }
 
 function updateMarkerState() {
   $('#markers p').each(function () {
-    var $radio = $(this).find('[type=radio]');
+    var $radio = $(this).find('.marker-radio');
     var markerName = getMarkerName($radio);
     if ($radio.is(':checked')) {
       currentMarker = markerName;
@@ -90,26 +90,38 @@ function updateMarkerState() {
   canvas.draw();
 }
 
+function buildDom() {
+  var html = '<p class="{{key}}"><input class="marker-radio" type="radio" name="marker" value="{{key}}">{{key}} <input class="marker-value" type="number" value="0" min=0 step=0.1></p>';
+
+  var $markers = $('#markers');
+  var keys = ["A", "S", "D", "F"];
+  keys.forEach(function (key) {
+    $markers.append(html.replace(/{{key}}/g, key));
+  });
+
+  $markers.find('.A .marker-radio').prop('checked', true);
+
+  var keyMap = {};
+  keys.forEach(function (key) {
+    var charCode = key.toLowerCase().charCodeAt(0);
+    keyMap[charCode] = key;
+  });
+  return keyMap;
+}
+
 
 $(function () {
+  var keyMap = buildDom();
   canvas = setupCanvas();
   audio = setupAudio(canvas);
 
   $('#canvas').click(canvasClick);
 
   $(document).keypress(function (e) {
-    var keys = {
-      97: "A",
-      115: "S",
-      100: "D",
-      102: "F",
-      103: "G"
-    };
-
-    keyPress(keys[e.which]);
+    keyPress(keyMap[e.which]);
   });
 
-  $('#markers input[type=radio]').change(changeMarker);
-  $('#markers input[type=number]').change(changeMarkerPosition);
+  $('#markers .marker-radio').change(changeMarker);
+  $('#markers .marker-value').change(changeMarkerPosition);
   $('#markers p').click(function () { selectMarker(this); });
 });

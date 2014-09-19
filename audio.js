@@ -2,6 +2,7 @@ function setupAudio(canvas) {
   var c = new AudioContext();
   var buff;
   var data;
+  var sampleRate;
   var oldSource;
   var currentBuffer;
   var markerBuffers = {};
@@ -32,7 +33,7 @@ function setupAudio(canvas) {
 
   function success() {
     data = [buff.getChannelData(0), buff.getChannelData(1)];
-
+    sampleRate = buff.sampleRate;
     samplesPerPixel = Math.floor(buff.length / canvas.width);
 
     var x, val;
@@ -55,8 +56,8 @@ function setupAudio(canvas) {
 
   function getBufferFrom(pos) {
     var newData = [];
-    newData[0] = new Float32Array(data[0].subarray(pos, pos + 44100));
-    newData[1] = new Float32Array(data[1].subarray(pos, pos + 44100));
+    newData[0] = new Float32Array(data[0].subarray(pos, pos + sampleRate));
+    newData[1] = new Float32Array(data[1].subarray(pos, pos + sampleRate));
 
     return hydrateAudioBuffer(newData, c);
   }
@@ -93,6 +94,7 @@ function setupAudio(canvas) {
   return {
     playBufferByName: playBufferByName,
     playFrom: playFrom,
-    updateBuffer: updateBuffer
+    updateBuffer: updateBuffer,
+    sampleRate: function () { return sampleRate; }
   };
 }
