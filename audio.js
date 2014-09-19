@@ -1,3 +1,7 @@
+//TODO:
+//* use trackpad to zoom in and out
+//* tabs along bottom for each sample point
+//
 function loadBuffer(context) {
   return function loadBufferWorker(path, cb) {
     var request = new XMLHttpRequest();
@@ -49,8 +53,6 @@ function success() {
     //ctx.fillRect(x, halfHeight - amplitude, 1, amplitude * 2);
   }
 
-  draw();
-
   /*
   var source = c.createBufferSource();
   source.buffer = buff;
@@ -60,11 +62,31 @@ function success() {
 }
 
 function draw() {
+  ctx.clearRect(0, 0, width, height);
   for (var i = 0; i < amplitudes.length; i++) {
     ctx.fillRect(i, halfHeight - amplitudes[i], 1, amplitudes[i] * 2);
   }
+
+  Object.keys(markerState).forEach(function (key) {
+    drawLine(markerState[key], key);
+  });
 }
 
+function drawLine(pos, key) {
+  var pos = markerState[key];
+  var x = Math.floor((width / buff.length) * pos);
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
+  ctx.fillRect(x, 0, 2, height);
+
+  var size = 10;
+  ctx.fillRect(x, height - size, size, size);
+  ctx.fillStyle = "white";
+  ctx.textBaseline = "top";
+  ctx.fillText(key, x + 1, height + 1 - size);
+  ctx.restore();
+
+}
 
 
 function canvasClick(e) {
@@ -77,25 +99,92 @@ function canvasClick(e) {
 
   var pos = Math.floor(x / width * buff.length);
 
+  setPosition(currentMarker, pos);
   playFrom(pos);
 }
 
 var oldSource;
+var currentBuffer;
+var markerState = {};
+var markerBuffers = {};
+var currentMarker;
+
 
 function playFrom(pos) {
-  oldSource && oldSource.stop();
+  currentBuffer = getBufferFrom(pos);
+  playBuffer(currentBuffer);
+}
+
+function getBufferFrom(pos) {
   var newData = [];
   newData[0] = new Float32Array(data[0].subarray(pos, pos + 44100));
   newData[1] = new Float32Array(data[1].subarray(pos, pos + 44100));
 
-  var newBuffer = hydrateAudioBuffer(newData, c);
+  return hydrateAudioBuffer(newData, c);
+}
 
+
+function playBuffer(buffer) {
+  oldSource && oldSource.stop();
   var source = c.createBufferSource();
-  source.buffer = newBuffer;
+  source.buffer = buffer;
   source.connect(c.destination);
   source.start();
   oldSource = source;
 }
+
+function keyPress(key) {
+  if (!currentBuffer) return;
+
+  if (key) {
+    $('#markers .' + key).find('[type=radio]').prop('checked', true);
+    updateCurrentSelection();
+    playBuffer(markerBuffers[key]);
+  }
+}
+
+function changeMarker() {
+  currentMarker = getMarkerName(this);
+}
+
+function changeMarkerPosition() {
+  updateMarkerState();
+}
+
+function selectMarker() {
+  $(this).find('[type=radio]').prop('checked', true);
+  updateCurrentSelection();
+}
+
+function getMarkerName(radio) {
+  return $(radio).val();
+}
+
+function setPosition(marker, pos) {
+  $('#markers .' + marker + ' [type=number]').val(pos);
+  updateMarkerState();
+}
+
+function updateCurrentSelection() {
+  currentMarker = $('#markers [type=radio]:checked').val();
+}
+
+function updateMarkerState() {
+  $('#markers p').each(function () {
+    var $radio = $(this).find('[type=radio]');
+    var markerName = getMarkerName($radio);
+    if ($radio.is(':checked')) {
+      currentMarker = markerName;
+    }
+    var markerValue = +$(this).find('[type=number]').val();
+    markerState[markerName] = markerValue;
+    markerBuffers[markerName] = getBufferFrom(markerValue);
+  });
+
+  console.log(markerState);
+  draw();
+}
+
 
 $(function () {
   loadBuffer(c)('accessorise.mp3', function (err, buffer) {
@@ -104,8 +193,25 @@ $(function () {
     } else {
       buff = buffer;
       success();
+      updateMarkerState();
     }
   });
 
   $('#canvas').click(canvasClick);
+
+  $(document).keypress(function (e) {
+    var keys = {
+      97: "A",
+      115: "S",
+      100: "D",
+      102: "F",
+      103: "G"
+    };
+
+    keyPress(keys[e.which]);
+  });
+
+  $('#markers input[type=radio]').change(changeMarker);
+  $('#markers input[type=number]').change(changeMarkerPosition);
+  $('#markers p').click(selectMarker);
 });
