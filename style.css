@@ -4,6 +4,18 @@ body {
   width: 1000px;
 }
 
+#distortion {
+  position: fixed;
+  right: 0;
+  top: 0;
+}
+
+#meter {
+  position: fixed;
+  right: 220px;
+  top: 0;
+}
+
 .marker {
   margin-bottom: 10px;
 }

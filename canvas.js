@@ -38,7 +38,7 @@ function setupCanvas() {
     var width = Math.floor(widthInSeconds * sampleRate / samplesPerPixel);
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,0.5)";
-    ctx.fillRect(x, 0, width, height);
+    ctx.fillRect(x, 0, width || 1, height);
 
     var size = 10;
     ctx.fillStyle = isCurrent ? "blue" : "gray";
