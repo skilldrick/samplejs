@@ -4,6 +4,7 @@ function setupAudio(canvas) {
   var buff;
   var data;
   var oldSource;
+  var interval;
   var currentBuffer;
   var markerBuffers = {};
 
@@ -51,7 +52,7 @@ function setupAudio(canvas) {
 
   function playFrom(pos) {
     currentBuffer = getBufferFrom(pos);
-    playBuffer(currentBuffer);
+    playBuffer(currentBuffer, pos);
   }
 
   function getBufferFrom(pos, length) {
@@ -125,18 +126,18 @@ function setupAudio(canvas) {
     var width = meterCanvas.width;
     var height = meterCanvas.height;
 
-    var hue = maxMax;
-    //var lineColor = "hsb(" + hue + ",1,1)"; //how does this work :P
+    var hue = (maxMax / 2 + 0.5) * 360;
+    var lineColor = "hsla(" + hue + ",100%,50%,1)";
 
     ctx.clearRect(0, 0, width, height);
     ctx.strokeWidth = 1;
     ctx.strokeRect(0, 0, width, height);
 
 
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, height - (level * height), width, level * height);
     ctx.save();
-    //ctx.fillStyle = lineColor;
+    ctx.fillStyle = lineColor;
+    //ctx.fillStyle = "black";
+    ctx.fillRect(0, height - (level * height), width, level * height);
     ctx.fillRect(0, height - (maxMax * height), width, 1);
     ctx.restore();
   }
@@ -181,28 +182,41 @@ function setupAudio(canvas) {
     delay.connect(wetMixNode);
     wetMixNode.connect(destination);
 
-    //source +-> dryMixNode -------------------------------------------------*-> destination
-    //       `> distortionNode -> filter -> feedbackGain -> delay -> wetMixNode -'
-    //            ^---------------------------------------'
+    //source +-> dryMixNode ------------------------------------------------------*-> destination
+    //       `> distortionNode -> filter -> feedbackGain -> delay -+> wetMixNode -'
+    //            ^------------------------------------------------'
   }
 
-  function playBuffer(buffer) {
+  function playBuffer(buffer, pos) {
+    interval && clearInterval(interval);
     oldSource && oldSource.stop();
+
+    canvas.setPlayPosition(pos);
+    var startTime = c.currentTime;
+    /*
+    interval = setInterval(function () {
+      canvas.setPlayPosition(pos, (c.currentTime - startTime) * sampleRate); //TODO:
+      console.log(c.currentTime - startTime);
+    }, 500);
+    */
+
     var source = c.createBufferSource();
     source.buffer = buffer;
     source.connect(master);
 
+    console.log(c);
     source.start();
     oldSource = source;
   }
 
   function playBufferByName(key) {
-    playBuffer(markerBuffers[key]);
+    var bufferInfo = markerBuffers[key];
+    playBuffer(bufferInfo[0], bufferInfo[1]);
   }
 
 
-  function updateBuffer(markerName, markerValue, markerLength) {
-    markerBuffers[markerName] = getBufferFrom(markerValue, markerLength);
+  function updateBuffer(markerName, pos, markerLength) {
+    markerBuffers[markerName] = [getBufferFrom(pos, markerLength), pos];
   }
 
 
@@ -247,7 +261,7 @@ function setupAudio(canvas) {
       destination: analyser,
       delaytime: 0.5,
       feedback: 0.2,
-      drymix: 0.8,
+      drymix: 1,
       wetmix: 1,
       distortion: 1.2,
       cutoff: 5000

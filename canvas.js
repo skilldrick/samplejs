@@ -58,9 +58,16 @@ function setupCanvas() {
     });
   }
 
+  function setPlayPosition(pos) {
+    var x = Math.floor(pos / samplesPerPixel);
+    ctx.fillStyle = "black";
+    ctx.fillRect(x, 0, 1, height);
+  }
+
   return {
     draw: draw,
     width: width,
-    setAmplitudes: setAmplitudes
+    setAmplitudes: setAmplitudes,
+    setPlayPosition: setPlayPosition
   };
 }
