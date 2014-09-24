@@ -25,13 +25,6 @@ function setupAudio(canvas) {
     };
   }
 
-  function hydrateAudioBuffer(buffers, context) {
-    var newBuffer = context.createBuffer(2, buffers[0].length, context.sampleRate);
-    newBuffer.getChannelData(0).set(buffers[0]);
-    newBuffer.getChannelData(1).set(buffers[1]);
-    return newBuffer;
-  }
-
   function success() {
     data = [buff.getChannelData(0), buff.getChannelData(1)];
     sampleRate = buff.sampleRate;
@@ -55,12 +48,13 @@ function setupAudio(canvas) {
     playBuffer(currentBuffer, pos);
   }
 
-  function getBufferFrom(pos, length) {
-    var newData = [];
-    newData[0] = new Float32Array(data[0].subarray(pos, pos + sampleRate * length));
-    newData[1] = new Float32Array(data[1].subarray(pos, pos + sampleRate * length));
+  function getBufferFrom(startOffset, length) {
+    var endOffset = startOffset + length * c.sampleRate;
+    var newBuffer = c.createBuffer(2, endOffset - startOffset, c.sampleRate);
+    newBuffer.getChannelData(1).set(buff.getChannelData(0).subarray(startOffset, endOffset));
+    newBuffer.getChannelData(1).set(buff.getChannelData(1).subarray(startOffset, endOffset));
 
-    return hydrateAudioBuffer(newData, c);
+    return newBuffer;
   }
 
   function makeDistortionCurve(func) {
